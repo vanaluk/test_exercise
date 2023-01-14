@@ -55,7 +55,7 @@ ret_t uci_get_value(const char *entry_name, char* out, int out_length)
   int print_size = 0;
   char uci_path[MAX_PATH] = {0};
 
-  TRACE(">> uci_get_value entry_name %p out %p leng %d", entry_name, out, out_length);
+  TRACE(">> uci_get_value entry_name %s out %p leng %d", entry_name, out, out_length);
 
   bzero(out, out_length);
 
@@ -98,17 +98,25 @@ ret_t uci_get_value(const char *entry_name, char* out, int out_length)
 
     uci_print_value(ptr.o);
 
-    if (ptr.o->type == UCI_TYPE_STRING)
+    if (ptr.o)
     {
-      strncpy(out, ptr.o->v.string, out_length);
+      if (ptr.o->type == UCI_TYPE_STRING)
+      {
+        strncpy(out, ptr.o->v.string, out_length);
+      }
+      else
+      {
+        TRACE("warning: unsupported uci type value, skip");
+        ret = RET_ERROR;
+        break;
+      }
     }
     else
     {
-      TRACE("warning: unsupported uci type value, skip");
-      ret = RET_ERROR;
+      TRACE("error: null options");
+      ret = RET_EMPTY;
       break;
     }
-
   }
   while(0);
 
@@ -119,7 +127,7 @@ ret_t uci_get_value(const char *entry_name, char* out, int out_length)
 
   TRACE("<< uci_get_value ret %d", ret);
 
-  return 0;
+  return ret;
 }
 
 ret_t uci_set_value(const char *option, const char *value)
@@ -129,7 +137,7 @@ ret_t uci_set_value(const char *option, const char *value)
   struct uci_ptr config;
   char uci_path[MAX_PATH] = {0};
 
-  TRACE(">> uci_set_value option %p value %p", option, value);
+  TRACE(">> uci_set_value option %s value %s", option, value);
 
   app_global_lock();
   strcpy(uci_path, app_ctx.uci_config_path);
@@ -187,5 +195,5 @@ ret_t uci_set_value(const char *option, const char *value)
 
   TRACE("<< uci_set_value ret %d", ret);
 
-  return 0;
+  return ret;
 }

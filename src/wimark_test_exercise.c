@@ -102,15 +102,18 @@ int main(int argc, char **argv)
       break;
     }
 
-    thread_error = pthread_create(&(tid[THREAD_MQTT]),
-                                  NULL,
-                                  &mqtt_module_main, NULL);
-
-    if (thread_error != 0)
+    if (app_get_enabled())
     {
-      TRACE("Thread can't be created :[%s]", strerror(thread_error));
-      ret = RET_ERROR;
-      break;
+      thread_error = pthread_create(&(tid[THREAD_MQTT]),
+                                    NULL,
+                                    &mqtt_module_main, NULL);
+
+      if (thread_error != 0)
+      {
+        TRACE("Thread can't be created :[%s]", strerror(thread_error));
+        ret = RET_ERROR;
+        break;
+      }
     }
 
     ret = app_main(NULL);
@@ -120,7 +123,12 @@ int main(int argc, char **argv)
       TRACE("warning: app finished ret %d", ret);
     }
 
-    pthread_join(tid[THREAD_MQTT], NULL);
+    if (app_get_enabled())
+    {
+      pthread_join(tid[THREAD_MQTT], NULL);
+      //pthread_cancel(tid[THREAD_MQTT]);
+      //pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    }
 
     pthread_cancel(tid[THREAD_UBUS]);
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);

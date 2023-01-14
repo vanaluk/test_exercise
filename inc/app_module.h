@@ -24,10 +24,15 @@
 #define UCI_CONFIG_FILE    "wm2022"
 #define UCI_CONFIG_SECTION "wimark_test_exercise"
 
-#define UCI_PROP_PERIOD    "period"
-#define UCI_PROP_SERVER    "server"
-#define UCI_PROP_TOPIC     "topic"
-#define UCI_PROP_ENABLED   "enabled"
+#define UCI_PROP_PERIOD             "period"
+#define UCI_PROP_SERVER             "server"
+#define UCI_PROP_TOPIC              "topic"
+#define UCI_PROP_ENABLED            "enabled"
+
+#define UCI_VALUE_PERIOD_DEFAULT    "60"
+#define UCI_VALUE_SERVER_DEFAULT    "localhost"
+#define UCI_VALUE_TOPIC_DEFAULT     "/my/secret/topic"
+#define UCI_VALUE_ENABLED_DEFAULT   "1"
 
 typedef struct app_context_s
 {

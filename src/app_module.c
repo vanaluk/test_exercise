@@ -63,14 +63,18 @@ ret_t app_init(char *uci_config_file, char *uci_config_section)
 
       if (ret != RET_OK)
       {
-        TRACE("warning: server config is not set");
+        TRACE("warning: server config is not set, will use default value");
+        ret = uci_set_value(UCI_PROP_SERVER, UCI_VALUE_SERVER_DEFAULT);
+        strcpy(app_ctx.server, UCI_VALUE_SERVER_DEFAULT);
       }
 
       ret = uci_get_value(UCI_PROP_TOPIC, app_ctx.topic, sizeof(app_ctx.topic));
 
       if (ret != RET_OK)
       {
-        TRACE("warning: topic config is not set");
+        ret = uci_set_value(UCI_PROP_TOPIC, UCI_VALUE_TOPIC_DEFAULT);
+        strcpy(app_ctx.topic, UCI_VALUE_TOPIC_DEFAULT);
+        TRACE("warning: topic config is not set, will use default value");
       }
 
       ret = uci_get_value(UCI_PROP_PERIOD, uci_param, sizeof(uci_param));
@@ -81,8 +85,9 @@ ret_t app_init(char *uci_config_file, char *uci_config_section)
       }
       else
       {
-        TRACE("warning: period config is not set");
-        app_ctx.period = 0;
+        ret = uci_set_value(UCI_PROP_PERIOD, UCI_VALUE_PERIOD_DEFAULT);
+        app_ctx.period = atoi(UCI_VALUE_PERIOD_DEFAULT);
+        TRACE("warning: period config is not set, will use default value");
       }
       app_ctx.last_period = app_ctx.period;
 
@@ -94,8 +99,9 @@ ret_t app_init(char *uci_config_file, char *uci_config_section)
       }
       else
       {
-        TRACE("warning: enabled config is set to false by default");
-        app_ctx.enabled = false;
+        ret = uci_set_value(UCI_PROP_ENABLED, UCI_VALUE_ENABLED_DEFAULT);
+        app_ctx.enabled = (bool)atoi(UCI_VALUE_ENABLED_DEFAULT);
+        TRACE("warning: enabled config is set to %d by default", app_ctx.enabled);
       }
     }
   }
@@ -268,14 +274,14 @@ bool app_is_running(void)
 
 void app_stop(void)
 {
-  pthread_cond_signal(app_get_condition()); //wake up thread 1
-
   app_global_lock();
 
   app_ctx.mqtt_thread_running = false;
   app_ctx.app_thread_running = false;
 
   app_global_unlock();
+
+  pthread_cond_signal(app_get_condition());
 }
 
 void mqtt_set_running(void)
