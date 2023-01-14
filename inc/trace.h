@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-extern bool global_trace_enable;
+extern const bool global_trace_enable;
 
 #define TRACE(a, args...) if (global_trace_enable == true)                                     \
                           {                                                                 \

@@ -11,15 +11,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define RET_OK              0U
-#define RET_ERROR           1U
-#define RET_BLOCKED         2U
-#define RET_EXIT            3U
-#define RET_BUSY            4U
-#define RET_EOF             5U
-#define RET_OUT_OF_RANGE    6U
-#define RET_EMPTY           7U
-#define RET_CANCELLED       8U
+#define RET_OK              (0)
+#define RET_ERROR           (-1)
+#define RET_BLOCKED         (-2)
+#define RET_EXIT            (-3)
+#define RET_BUSY            (-4)
+#define RET_EOF             (-5)
+#define RET_OUT_OF_RANGE    (-6)
+#define RET_EMPTY           (-7)
+#define RET_CANCELLED       (-8)
 
 #define UNUSED(v)      (void)v
 

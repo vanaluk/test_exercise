@@ -8,54 +8,34 @@
  ============================================================================
  */
 
-#include "global.h"
+#include "app_module.h"
+#include "ubus_module.h"
+
+#define UBUS_MODULE_TEST 0
+#define UCI_MODULE_TEST  0
+
+#ifdef UCI_MODULE_TEST
 #include "uci_module.h"
+#endif
 
-static char config_file[MAX_FILENAME] = "wm2022";
-static char config_name[MAX_FILENAME] = "wimark_test_exercise";
+const bool global_trace_enable = true;
 
-typedef struct app_context_s
+enum
 {
-  char uci_path[MAX_PATH];
-} app_context_t;
+  THREAD_UBUS = 0,
+  THREAD_COUNT
+};
 
-bool global_trace_enable = true;
-static app_context_t app_ctx = {0};
+static pthread_t tid[THREAD_COUNT];
 
-static ret_t app_init()
+int main(int argc, char **argv)
 {
   ret_t ret = RET_OK;
-  int print_size = 0;
-
-  TRACE(">> app_init");
+  int thread_error = 0;
 
   do
   {
-    print_size = snprintf(app_ctx.uci_path, sizeof(app_ctx.uci_path), "%s.%s", config_file, config_name);
-
-    if (print_size < 0)
-    {
-      ret = RET_ERROR;
-      break;
-    }
-
-    println("uci prop path <%s>", app_ctx.uci_path);
-  }
-  while(0);
-
-  TRACE("<< app_init ret %d", ret);
-
-  return ret;
-}
-
-
-int main()
-{
-  ret_t ret = RET_OK;
-
-  do
-  {
-    ret = app_init();
+    ret = app_init(UCI_CONFIG_FILE, UCI_CONFIG_SECTION);
 
     if (ret != RET_OK)
     {
@@ -63,39 +43,76 @@ int main()
       break;
     }
 
-    ret = uci_show_value(app_ctx.uci_path, "period");
-
-    if (ret != RET_OK)
+#ifdef UCI_MODULE_TEST
     {
-      println("error: can't show_config_entry %d", ret);
+      char uci_param[MAX_PATH] = { 0 };
+
+      ret = uci_get_value(UCI_PROP_SERVER, uci_param, sizeof(uci_param));
+
+      if (ret != RET_OK)
+      {
+        TRACE("warning: server config is not set");
+      }
+
+      ret = uci_get_value(UCI_PROP_TOPIC, uci_param, sizeof(uci_param));
+
+      if (ret != RET_OK)
+      {
+        TRACE("warning: topic config is not set");
+      }
+
+      ret = uci_get_value(UCI_PROP_PERIOD, uci_param, sizeof(uci_param));
+
+      if (ret != RET_OK)
+      {
+        TRACE("warning: period config is not set");
+      }
+
+      ret = uci_get_value(UCI_PROP_ENABLED, uci_param, sizeof(uci_param));
+
+      if (ret != RET_OK)
+      {
+        TRACE("warning: enabled config is not set");
+      }
+
+      ret = uci_set_value(UCI_PROP_PERIOD, "60");
+
+      if (ret != RET_OK)
+      {
+        TRACE("warning: enabled config is not set");
+      }
+    }
+#endif
+
+/*
+#ifdef UBUS_MODULE_TEST
+    ubus_module_main();
+#endif
+*/
+    thread_error = pthread_create(&(tid[THREAD_UBUS]),
+                                  NULL,
+                                  &ubus_module_main, NULL);
+
+    if (thread_error != 0)
+    {
+      TRACE("Thread can't be created :[%s]", strerror(thread_error));
+      ret = RET_ERROR;
       break;
     }
 
-    ret = uci_set_value(app_ctx.uci_path, "server", "my.mqtt.com");
+    ret = app_main(NULL);
 
     if (ret != RET_OK)
     {
-      println("error: can't uci_set_value %d", ret);
-      break;
+      TRACE("warning: app finished ret %d", ret);
     }
 
-    ret = uci_set_value(app_ctx.uci_path, "topic", "/my/secret/topic");
-
-    if (ret != RET_OK)
-    {
-      println("error: can't uci_set_value %d", ret);
-      break;
-    }
-
-    ret = uci_set_value(app_ctx.uci_path, "enabled", "1");
-
-    if (ret != RET_OK)
-    {
-      println("error: can't uci_set_value %d", ret);
-      break;
-    }
+    pthread_cancel(tid[THREAD_UBUS]);
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
   }
   while(0);
+
+  app_deinit();
 
   return 0;
 

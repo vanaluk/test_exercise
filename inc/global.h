@@ -8,6 +8,10 @@
 #ifndef GLOBAL_H_
 #define GLOBAL_H_
 
+#include <pthread.h>
+#include <unistd.h>
+#include <string.h>
+
 #include "app_errors.h"
 #include "trace.h"
 
