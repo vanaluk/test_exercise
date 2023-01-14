@@ -14,7 +14,7 @@
 
 extern const bool global_trace_enable;
 
-#define TRACE(a, args...) if (global_trace_enable == true)                                     \
+#define TRACE(a, args...) if (global_trace_enable == true)                                  \
                           {                                                                 \
                             printf("%s(%s:%d) \n" a,  __func__,__FILE__, __LINE__, ##args); \
                             printf("\n");                                                   \

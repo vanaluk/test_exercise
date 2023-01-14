@@ -7,6 +7,7 @@
 
 #include "app_module.h"
 #include "uci_module.h"
+#include "mqtt_module.h"
 
 app_context_t app_ctx = {0};
 
@@ -33,10 +34,17 @@ ret_t app_init(char *uci_config_file, char *uci_config_section)
   {
     if (pthread_mutex_init(&app_ctx.lock, NULL) != 0)
     {
-        TRACE("error: mutex init has failed");
-        ret = RET_ERROR;
-        break;
+      TRACE("error: mutex init has failed");
+      ret = RET_ERROR;
+      break;
     }
+
+    if (pthread_cond_init(&app_ctx.condition, NULL) != 0)
+    {
+      TRACE("error: mutex init has failed");
+      ret = RET_ERROR;
+      break;
+      }
 
     print_size = snprintf(app_ctx.uci_config_path, sizeof(app_ctx.uci_config_path), "%s.%s", uci_config_file, uci_config_section);
 
@@ -101,6 +109,7 @@ ret_t app_init(char *uci_config_file, char *uci_config_section)
 void app_deinit(void)
 {
   pthread_mutex_destroy(&app_ctx.lock);
+  pthread_cond_destroy(&app_ctx.condition);
   bzero(&app_ctx, sizeof(app_ctx));
 }
 
@@ -130,6 +139,64 @@ int app_get_period(void)
   return period;
 }
 
+void app_get_server(char *out_server, int len)
+{
+  app_global_lock();
+
+  strncpy(out_server, app_ctx.server, len);
+
+  app_global_unlock();
+}
+
+void app_get_topic(char *out_topic, int len)
+{
+  app_global_lock();
+
+  strncpy(out_topic, app_ctx.topic, len);
+
+  app_global_unlock();
+}
+
+bool app_get_enabled(void)
+{
+  bool enabled;
+
+  app_global_lock();
+
+  enabled = app_ctx.enabled;
+
+  app_global_unlock();
+
+  return enabled;
+}
+
+void app_set_mqtt_reinit(bool state)
+{
+  app_global_lock();
+
+  app_ctx.mqtt_reinit = state;
+
+  app_global_unlock();
+}
+
+bool app_get_mqtt_reinit(void)
+{
+  bool state;
+
+  app_global_lock();
+
+  state = app_ctx.mqtt_reinit;
+
+  app_global_unlock();
+
+  return state;
+}
+
+pthread_cond_t* app_get_condition(void)
+{
+  return &app_ctx.condition;
+}
+
 ret_t app_main(void* arg)
 {
   ret_t ret = RET_OK;
@@ -152,7 +219,7 @@ ret_t app_main(void* arg)
       if (result < 0)
       {
         ret = RET_ERROR;
-        app_ctx.app_thread_running = false;
+        app_stop();
         TRACE("error: sprintf fail");
         break;
       }
@@ -162,18 +229,24 @@ ret_t app_main(void* arg)
       if (ret != RET_OK)
       {
         ret = RET_ERROR;
-        app_ctx.app_thread_running = false;
+        app_stop();
         TRACE("error: uci set new period fail");
         break;
       }
 
       app_ctx.last_period = safe_period;
 
-      // todo: restart mqqt
+      app_set_mqtt_reinit(true);
     }
 
-    // todo: mqtt work
+    //usleep(1000); // better use cond_wait or IPC
+
+    pthread_mutex_lock(&app_ctx.lock);
+    pthread_cond_wait(&app_ctx.condition, &app_ctx.lock);
+    pthread_mutex_unlock(&app_ctx.lock);
   }
+
+  mqtt_stop();
 
   TRACE("< app_main ret %d", ret);
 
@@ -195,9 +268,45 @@ bool app_is_running(void)
 
 void app_stop(void)
 {
+  pthread_cond_signal(app_get_condition()); //wake up thread 1
+
   app_global_lock();
 
+  app_ctx.mqtt_thread_running = false;
   app_ctx.app_thread_running = false;
 
   app_global_unlock();
+}
+
+void mqtt_set_running(void)
+{
+  app_global_lock();
+
+  app_ctx.mqtt_thread_running = true;
+
+  app_global_unlock();
+
+}
+
+bool mqtt_is_running(void)
+{
+  bool running = false;
+
+  app_global_lock();
+
+  running = app_ctx.mqtt_thread_running;
+
+  app_global_unlock();
+
+  return running;
+}
+
+void mqtt_stop(void)
+{
+  app_global_lock();
+
+  app_ctx.mqtt_thread_running = false;
+
+  app_global_unlock();
+
 }

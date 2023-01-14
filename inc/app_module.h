@@ -37,9 +37,11 @@ typedef struct app_context_s
   int  period;
   bool enabled;
   bool app_thread_running;
-  bool ubus_thread_running;
+  bool mqtt_thread_running;
+  bool mqtt_reinit;
   int  last_period;
   pthread_mutex_t lock;
+  pthread_cond_t condition;
 } app_context_t;
 
 extern app_context_t app_ctx;
@@ -52,10 +54,20 @@ void  app_global_unlock(void);
 
 ret_t app_set_period(int period);
 int app_get_period(void);
+void app_get_server(char *out_server, int len);
+void app_get_topic(char *out_topic, int len);
+bool app_get_enabled(void);
+void app_set_mqtt_reinit(bool state);
+bool app_get_mqtt_reinit(void);
+pthread_cond_t* app_get_condition(void);
 
 ret_t app_main(void* arg);
 
 bool app_is_running(void);
 void app_stop(void);
+
+void mqtt_set_running(void);
+bool mqtt_is_running(void);
+void mqtt_stop(void);
 
 #endif /* APP_MODULE_H_ */

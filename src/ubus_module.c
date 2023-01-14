@@ -97,6 +97,8 @@ static int ubus_add_handler(struct ubus_context *ctx, struct ubus_object *obj,
   blobmsg_add_u32(&b, "period", period);
   ubus_send_reply(ctx, req, b.head);
 
+  pthread_cond_signal(app_get_condition()); //wake up thread 1
+
   TRACE("<< ubus_add_handler");
 
   return 0;

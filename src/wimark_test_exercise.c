@@ -10,6 +10,7 @@
 
 #include "app_module.h"
 #include "ubus_module.h"
+#include "mqtt_module.h"
 
 #define UBUS_MODULE_TEST 0
 #define UCI_MODULE_TEST  0
@@ -23,6 +24,7 @@ const bool global_trace_enable = true;
 enum
 {
   THREAD_UBUS = 0,
+  THREAD_MQTT,
   THREAD_COUNT
 };
 
@@ -100,12 +102,25 @@ int main(int argc, char **argv)
       break;
     }
 
+    thread_error = pthread_create(&(tid[THREAD_MQTT]),
+                                  NULL,
+                                  &mqtt_module_main, NULL);
+
+    if (thread_error != 0)
+    {
+      TRACE("Thread can't be created :[%s]", strerror(thread_error));
+      ret = RET_ERROR;
+      break;
+    }
+
     ret = app_main(NULL);
 
     if (ret != RET_OK)
     {
       TRACE("warning: app finished ret %d", ret);
     }
+
+    pthread_join(tid[THREAD_MQTT], NULL);
 
     pthread_cancel(tid[THREAD_UBUS]);
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
