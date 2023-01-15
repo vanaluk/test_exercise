@@ -8,11 +8,14 @@
 #include <mosquitto.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <signal.h>
+#include <sys/time.h>
 
 #include "mqtt_module.h"
+#include "stat_module.h"
 
 #define MQTT_MEASUREMENTS_QOS 0
-static char client_id[] = "qimark-mqtt-test";
+static char client_id[] = "wimark-mqtt-test";
 
 #define MQTT_MSG_MAX_LEN (4096)
 #define MQTT_TOPIC_MAX_LEN 128
@@ -67,7 +70,7 @@ static ret_t mqtt_client_send_msg_to_mosquitto(void)
 
     app_get_topic(topic_name, sizeof(topic_name));
     strcpy(msg.topic_name, topic_name);
-    strcpy(msg.msg, "cpu=100");
+    stat_get_cpu_load(msg.msg, sizeof(msg.msg));
     msg.len = strlen(msg.msg);
     msg.qos = MQTT_MEASUREMENTS_QOS;
 
@@ -99,6 +102,72 @@ static ret_t mqtt_client_send_msg_to_mosquitto(void)
   return ret;
 }
 
+void timer_callback(int signum)
+{
+  struct timeval now;
+  ret_t ret = RET_OK;
+
+  gettimeofday(&now, NULL);
+  TRACE("Signal %d caught on %li.%03li ", signum, now.tv_sec, now.tv_usec / 1000);
+
+  ret = mqtt_client_send_msg_to_mosquitto();
+
+  if (ret != RET_OK)
+  {
+    TRACE("warning: can't send packet to Mosquitto ret %d ", ret);
+  }
+}
+
+static void mqtt_client_timer_start(void)
+{
+  struct itimerval new_timer;
+  struct itimerval old_timer;
+  int period = 0;
+
+  TRACE("> mqtt_client_timer_start");
+
+  period = app_get_period();
+
+  TRACE("mqtt_client_timer_start: period %d", period);
+
+  new_timer.it_value.tv_sec = period;
+  new_timer.it_value.tv_usec = 0;
+  new_timer.it_interval.tv_sec = period;
+  new_timer.it_interval.tv_usec = 0;
+
+  setitimer(ITIMER_REAL, &new_timer, &old_timer);
+  signal(SIGALRM, timer_callback);
+
+  TRACE("< mqtt_client_timer_start");
+}
+
+static void mqtt_client_timer_stop(void)
+{
+  struct itimerval new_timer;
+  struct itimerval old_timer;
+
+  TRACE("> mqtt_client_timer_stop");
+
+  new_timer.it_value.tv_sec = 0;
+  new_timer.it_value.tv_usec = 0;
+  new_timer.it_interval.tv_sec = 0;
+  new_timer.it_interval.tv_usec = 0;
+
+  setitimer(ITIMER_REAL, &new_timer, &old_timer);
+
+  TRACE("< mqtt_client_timer_stop");
+}
+
+static void mqtt_client_timer_restart(void)
+{
+  TRACE("> mqtt_client_timer_restart");
+
+  mqtt_client_timer_stop();
+  mqtt_client_timer_start();
+
+  TRACE("< mqtt_client_timer_restart");
+}
+
 static void mqtt_connect_callback(struct mosquitto *mosq, void *obj, int result)
 {
   UNUSED(obj);
@@ -108,8 +177,7 @@ static void mqtt_connect_callback(struct mosquitto *mosq, void *obj, int result)
   mqtt_client_ctx.mqtt_pub_in_progress = false;
   //mqtt_client_ctx.mqtt_reinitialised = false;
 
-  //if reconnect, we want to send accumulated messages
-  //mqtt_client_send_msg_to_mosquitto();
+  mqtt_client_timer_restart();
 }
 
 
@@ -289,6 +357,8 @@ static ret_t mqtt_client_init()
 
 static void mqtt_client_deinit(void)
 {
+  mqtt_client_timer_stop();
+
   if (mosq)
   {
     mosquitto_disconnect(mosq);
@@ -321,6 +391,10 @@ static void mqtt_client_loop()
 
   while(mqtt_is_running())
   {
+    //TRACE(">mosquitto_loop");
+    mosquitto_loop(mosq, 1000, 1);
+    //TRACE("<mosquitto_loop");
+
     /* Check connection to mqtt broker */
     if (mqtt_client_ctx.mqtt_disconnected)
     {
@@ -356,6 +430,8 @@ static void mqtt_client_loop()
 
     if (app_get_mqtt_reinit())
     {
+      TRACE("Mosquitto reinit start");
+
       app_set_mqtt_reinit(false);
       ret = mqtt_client_reinit();
 
@@ -364,11 +440,12 @@ static void mqtt_client_loop()
         TRACE("Mosquitto reinit failed");
         break;
       }
+
+      TRACE("Mosquitto reinit finish");
     }
 
-    //usleep(1000); // better use cond_wait or IPC
-    mqtt_client_send_msg_to_mosquitto();
-    sleep(10);
+    //mqtt_client_send_msg_to_mosquitto();
+    //sleep(10);
   }
 
   TRACE("<mqtt_client_loop");
