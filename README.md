@@ -1,4 +1,4 @@
-# Firmware Virtual Box Dev Environment
+# Firmware Virtual Box Dev Environment for test_exercise
 
 Use Vagrant with virtualbox as the provider with all the hosts that we want to target (Linux, Mac\*, Windows). 
 
