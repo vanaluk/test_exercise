@@ -41,7 +41,7 @@ ret_t app_init(char *uci_config_file, char *uci_config_section)
 
     if (pthread_cond_init(&app_ctx.condition, NULL) != 0)
     {
-      TRACE("error: mutex init has failed");
+      TRACE("error: pthread_con init has failed");
       ret = RET_ERROR;
       break;
       }
