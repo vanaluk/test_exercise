@@ -86,9 +86,8 @@ config wimark_config 'wimark_test_exercise'
 `option enabled '1'` - means mqtt client will report CPU load each `period '60'` seconds.
 If `option enabled` set `0`, then mqtt client will not report. 
 
-2. Connect to virtual machine using other ssh terminal:
+2. Connect to virtual machine using other ssh terminal and subscripe to mosquitto topic:
 
-* Subscripe to mosquitto topic:
 ```bash
 ./connect.sh -c 'mosquitto_sub -t "/my/secret/topic"'
 ```
@@ -99,16 +98,19 @@ CPU: 2.638071%
 CPU: 1.446801%
 ```
 
-3. Connect to virtual machine using other ssh terminal (the same as step 2)
+3. Connect to virtual machine using other ssh terminal
+
+```bash
+./connect.sh 
+```
 
 * Check wimark-ubus status:
 ```bash
-./connect.sh -c 'sudo ubus call wimark-ubus status'
+sudo ubus call wimark-ubus status
 ```
 
 * Change period report value using ubus:
 ```bash
-./connect.sh 
 sudo ubus call wimark-ubus add '{"period" : "45"}'
 ```
 
