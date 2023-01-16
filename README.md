@@ -10,20 +10,18 @@ Then run:
 ```bash
 # you should already be in 'test_exercise' folder
 cd env
-./connect.sh -m $PROJECT_PATH -k $KEY_DIR
+./connect.sh -m $PROJECT_PATH
 ```
 
 Where:
 
-* the -k and -m options are only needed for the first time, then they're cached (`PROJECT_PATH` - full path to your test_exercise)
+* The -m options are only needed for the first time, then they're cached (`PROJECT_PATH` - full path to your test_exercise)
 In my case:
 ```bash
-./connect.sh -m /home/vanaluk/Work/test_exercise/ -k /home/vanaluk/Work/test_exercise/key
+./connect.sh -m /home/vanaluk/Work/test_exercise/
 ```
 
 If the `-m` parameter is skipped the provisioner will take no action. You will not have a firmware directory linked to your virtual machine. This value is cached in `.cache`.
-
-If the `-k` parameter is skipped the provisioner will take no action. You will not have a keys directory linked to your virtual machine. This value is cached in `.keys_cache`.
 
 * I've given the virtual machine 2 cores and 4 GB of memory. 
 * This will use lots of download data, you've been warned!
@@ -57,7 +55,7 @@ If you'd like to shut down your virtual machine call `./connect.sh -s`.
 
 If for some reason you need to start from scratch `./connect.sh -d` will erase the cache and destroy the vagrant machine.
 
-You can now take a look around. The project folder is mounted to `~/test_exercise` and the keys folder to `~/keys`. These are the same folders as those on your host machine. You can use your favorite editor(s) or IDE(s) in either the host or vm. The build commands will need to be run from the VM.
+You can now take a look around. The project folder is mounted to `~/test_exercise`. These are the same folders as those on your host machine. You can use your favorite editor(s) or IDE(s) in either the host or vm. The build commands will need to be run from the VM.
 
 # Build test exercise
 
