@@ -40,7 +40,7 @@ main-build: wimark_test_exercise
 wimark_test_exercise: $(OBJS) $(USER_OBJS) makefile $(OPTIONAL_TOOL_DEPS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc  -o "wimark_test_exercise" $(OBJS) $(USER_OBJS) $(LIBS) -luci -lmosquitto -lubus -lubox
+	gcc  -o "wimark_test_exercise" $(OBJS) $(USER_OBJS) $(LIBS) -luci -lmosquitto -lubus -lubox -lpthread
 	@echo 'Finished building target: $@'
 	@echo ' '
 
