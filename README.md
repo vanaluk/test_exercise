@@ -2,8 +2,8 @@
 
 Use Vagrant with virtualbox as the provider with all the hosts that we want to target (Linux, Mac\*, Windows). 
 
- 1. Install [Virtualbox](https://www.virtualbox.org/wiki/Downloads) (tested with 6.1.34 r150636)
- 2. Install [Vagrant](https://www.vagrantup.com/downloads) (tested with 2.2.19)
+ 1. Install [Virtualbox](https://www.virtualbox.org/wiki/Downloads) (tested with 6.1.40 r154048)
+ 2. Install [Vagrant](https://www.vagrantup.com/downloads) (tested with 2.3.4)
 
 Then run:
 
