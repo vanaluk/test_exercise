@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+  #!/usr/bin/env bash
 
 PROGNAME=$0
 PROGDIR=$(dirname ${PROGNAME})
@@ -59,7 +59,7 @@ while getopts "dhm:c:ps" opt; do
     case $opt in
 	d)  DESTROY="true";;
 	h)  usage && exit 0;;
-	m)  IOP=$OPTARG;;
+	m)  DIR=$OPTARG;;
 	c)  COMMAND=$OPTARG;;
 	p)  PROVISION="true";;
 	s)  STOP="true";;
@@ -87,15 +87,15 @@ fi
 
 # If we have a value for io store it in cache
 # else read from the cache
-if [ -n "$IOP" ]; then
-    echo $IOP > $CACHE_FILE
+if [ -n "$DIR" ]; then
+    echo $DIR > $CACHE_FILE
 elif [ -f "$CACHE_FILE" ]; then
-    IOP=$( cat $CACHE_FILE )
+    DIR=$( cat $CACHE_FILE )
 elif [ -d ${DEFAULT_DIR} ]; then
-    IOP=$(realpath ${DEFAULT_DIR})
+    DIR=$(realpath ${DEFAULT_DIR})
 fi
 
-if [ -z "$IOP" ]; then
+if [ -z "$DIR" ]; then
     read -p "Path to project repository not found, continue? (y/[n]) " choice
     case $choice in
 	y|Y) : ;;
@@ -113,8 +113,8 @@ fi
 
 cd ${PROGDIR}
 echo "Bringing up vagrant ${VM_ID}"
-echo "PROJECT_PATH=${IOP}"
-SSH_HOST_PORT=${SSH_HOST_PORT} PROJECT_PATH=${IOP} ${VAGRANT} up
+echo "PROJECT_PATH=${DIR}"
+SSH_HOST_PORT=${SSH_HOST_PORT} PROJECT_PATH=${DIR} ${VAGRANT} up
 
 if [ "$?" -ne 0 ]; then
     echo "Something failed when bringing vagrant up"

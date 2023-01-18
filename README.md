@@ -8,7 +8,7 @@ Use Vagrant with virtualbox as the provider with all the hosts that we want to t
 Then run:
 
 ```bash
-# you should already be in 'test_exercise' folder
+# go to 'test_exercise' folder
 cd env
 ./connect.sh -m $PROJECT_PATH
 ```
@@ -23,12 +23,10 @@ In my case:
 
 If the `-m` parameter is skipped the provisioner will take no action. You will not have a firmware directory linked to your virtual machine. This value is cached in `.cache`.
 
-* I've given the virtual machine 2 cores and 4 GB of memory. 
-* This will use lots of download data, you've been warned!
-* At the moment I don't think the keys are properly used, I've been using the unity keys folder for now since Io doesn't have its own set yet. If you don't provide it, it simply won't be mounted for you.
-* Grab a coffee and come back maybe? This takes 10 minutes on my machine.
+* I've given the virtual machine 4 cores and 4 GB of memory. 
+* This will use lots of download data, you've been warned! This takes 30 minutes on my machine.
 
-Once that completes you will be dropped into a terminal within the vagrant box (ssh connection to virtualbox machine). The first thing you need to do is reboot. We also have some manual configs to set in the virtualbox GUI that requires the vm be turned off. Lets do both quickly.
+Once that completes you will be dropped into a terminal within the vagrant box (ssh connection to virtualbox machine). The first thing you need to do is reboot. 
 
 Close the open ssh session that we landed inafter the vagrant install:
 
@@ -49,13 +47,13 @@ Start up the virtual machine again using:
 ./connect.sh
 ```
 
-Once the paths are cached you can simply call `./connect.sh` to start and/or connect to your box.
+`./connect.sh` to start and/or connect to your box using cash dir.
 
-If you'd like to shut down your virtual machine call `./connect.sh -s`.
+`./connect.sh -s` shut down your virtual machine call.
 
-If for some reason you need to start from scratch `./connect.sh -d` will erase the cache and destroy the vagrant machine.
+`./connect.sh -d` erase the cache and destroy the vagrant machine.
 
-You can now take a look around. The project folder is mounted to `~/test_exercise`. These are the same folders as those on your host machine. You can use your favorite editor(s) or IDE(s) in either the host or vm. The build commands will need to be run from the VM.
+You can now take a look around. The project folder is mounted to `~/test_exercise`. These are the same folders as those on your host machine. The build commands will need to be run from the VM.
 
 # Build test exercise
 
