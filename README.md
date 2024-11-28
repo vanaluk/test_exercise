@@ -1,4 +1,13 @@
-# Wimark test_exercise
+# C test exercise
+
+## Task
+C program that will run in an OpenWRT environment and have the following functions:
+1. Ubus : program is connected to ubus  and implemented some request handler function;
+2. UCI: saving the period parameter to the config file;
+3. MQTT: program has connection to MQTT server and with period period from the previous points send data about its state (cpu, memory) to some topik (MQTT server and topik are configured also from uci)
+4. use multithreading
+
+## How to run 
 
 Use Vagrant with virtualbox as the provider with all the hosts that we want to target (Linux, Mac\*, Windows). 
 
